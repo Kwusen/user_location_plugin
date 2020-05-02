@@ -58,7 +58,7 @@ class _MapsPluginLayerState extends State<MapsPluginLayer>
 
   void initialize() {
     location.hasPermission().then((onValue) async {
-      if (onValue == false) {
+      if (onValue == PermissionStatus.DENIED) {
         await location.requestPermission();
         printLog("Request Permission Granted");
         location.serviceEnabled().then((onValue) async {
@@ -130,6 +130,7 @@ class _MapsPluginLayerState extends State<MapsPluginLayer>
               builder: (context) {
                 return Container(
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       Stack(
                         alignment: AlignmentDirectional.center,
@@ -139,10 +140,8 @@ class _MapsPluginLayerState extends State<MapsPluginLayer>
                               : ClipOval(
                                   child: Container(
                                     child: new Transform.rotate(
-                                        angle: ((_direction ?? 0) *
-                                                (math.pi / 180) *
-                                                -2) +
-                                            180,
+                                        angle: ((_direction ?? 0.0)*
+                                                math.pi)  / 180.0 - math.pi,
                                         child: Container(
                                           child: CustomPaint(
                                             size: Size(60.0, 60.0),
@@ -206,7 +205,8 @@ class _MapsPluginLayerState extends State<MapsPluginLayer>
             _currentLocation.longitude ?? LatLng(0, 0)),
         zoom ?? widget.map.zoom ?? 15,
         widget.options.mapController,
-        this);
+        this,
+        );
     // widget.options.mapController.move(
     //     LatLng(_currentLocation.latitude ?? LatLng(0, 0),
     //         _currentLocation.longitude ?? LatLng(0, 0)),
@@ -257,7 +257,7 @@ class _MapsPluginLayerState extends State<MapsPluginLayer>
             right: widget.options.fabRight,
             height: widget.options.fabHeight,
             width: widget.options.fabWidth,
-            child: InkWell(
+            child: InkResponse(
                 hoverColor: Colors.blueAccent[200],
                 onTap: () {
                   initialize();
@@ -289,14 +289,14 @@ class _MapsPluginLayerState extends State<MapsPluginLayer>
   }
 
   void animatedMapMove(
-      LatLng destLocation, double destZoom, _mapController, vsync) {
+      LatLng destLocation, double destZoom, mapController, vsync,) {
     // Create some tweens. These serve to split up the transition from one location to another.
     // In our case, we want to split the transition be<tween> our current map center and the destination.
-    final _latTween = Tween<double>(
-        begin: _mapController.center.latitude, end: destLocation.latitude);
-    final _lngTween = Tween<double>(
-        begin: _mapController.center.longitude, end: destLocation.longitude);
-    final _zoomTween = Tween<double>(begin: _mapController.zoom, end: destZoom);
+    final latTween = Tween<double>(
+        begin: mapController.center.latitude, end: destLocation.latitude);
+    final lngTween = Tween<double>(
+        begin: mapController.center.longitude, end: destLocation.longitude);
+    final zoomTween = Tween<double>(begin: mapController.zoom, end: destZoom);
 
     // Create a animation controller that has a duration and a TickerProvider.
     var controller = AnimationController(
@@ -307,9 +307,9 @@ class _MapsPluginLayerState extends State<MapsPluginLayer>
         CurvedAnimation(parent: controller, curve: Curves.fastOutSlowIn);
 
     controller.addListener(() {
-      _mapController.move(
-          LatLng(_latTween.evaluate(animation), _lngTween.evaluate(animation)),
-          _zoomTween.evaluate(animation));
+      mapController.move(
+          LatLng(latTween.evaluate(animation), lngTween.evaluate(animation)),
+          zoomTween.evaluate(animation));
     });
 
     animation.addStatusListener((status) {

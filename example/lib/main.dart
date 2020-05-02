@@ -33,7 +33,6 @@ class HomePage extends StatelessWidget {
     });
 
     userLocationOptions = UserLocationOptions(
-        context: context,
         mapController: mapController,
         markers: markers,
         onLocationUpdate: (LatLng pos) =>

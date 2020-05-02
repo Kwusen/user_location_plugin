@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/plugin_api.dart';
 import 'package:latlong/latlong.dart';
-import 'package:location/location.dart';
 
 class UserLocationOptions extends LayerOptions {
-  BuildContext context;
   List<Marker> markers;
   MapController mapController;
 
@@ -26,8 +24,7 @@ class UserLocationOptions extends LayerOptions {
   double defaultZoom;
 
   UserLocationOptions(
-      {@required this.context,
-      @required this.markers,
+      {@required this.markers,
       this.mapController,
       this.markerWidget,
       this.onLocationUpdate,
