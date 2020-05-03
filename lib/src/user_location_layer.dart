@@ -29,7 +29,6 @@ class _MapsPluginLayerState extends State<MapsPluginLayer>
   var location = Location();
 
   bool mapLoaded;
-  bool initialStateOfupdateMapLocationOnPositionChange;
 
   double _direction;
 
@@ -39,9 +38,6 @@ class _MapsPluginLayerState extends State<MapsPluginLayer>
   @override
   void initState() {
     super.initState();
-
-    initialStateOfupdateMapLocationOnPositionChange =
-        widget.options.updateMapLocationOnPositionChange;
 
     setState(() {
       mapLoaded = false;
@@ -261,11 +257,9 @@ class _MapsPluginLayerState extends State<MapsPluginLayer>
                 hoverColor: Colors.blueAccent[200],
                 onTap: () {
                   initialize();
-                  if (initialStateOfupdateMapLocationOnPositionChange) {
                     setState(() {
-                      widget.options.updateMapLocationOnPositionChange = false;
+                      widget.options.updateMapLocationOnPositionChange = ! widget.options.updateMapLocationOnPositionChange;
                     });
-                  }
                   _moveMapToCurrentLocation(zoom: 17.0);
                 },
                 child: widget.options
@@ -314,19 +308,8 @@ class _MapsPluginLayerState extends State<MapsPluginLayer>
 
     animation.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        if (initialStateOfupdateMapLocationOnPositionChange) {
-          setState(() {
-            widget.options.updateMapLocationOnPositionChange = true;
-          });
-        }
-
         controller.dispose();
       } else if (status == AnimationStatus.dismissed) {
-        if (initialStateOfupdateMapLocationOnPositionChange) {
-          setState(() {
-            widget.options.updateMapLocationOnPositionChange = true;
-          });
-        }
         controller.dispose();
       }
     });
