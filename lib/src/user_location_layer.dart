@@ -35,7 +35,7 @@ class _MapsPluginLayerState extends State<MapsPluginLayer>
   StreamSubscription<LocationData> _onLocationChangedStreamSubscription;
   StreamSubscription<double> _compassStreamSubscription;
 
-AnimationController _controller;
+  AnimationController _controller;
 
   @override
   void initState() {
@@ -141,8 +141,9 @@ AnimationController _controller;
                               : ClipOval(
                                   child: Container(
                                     child: new Transform.rotate(
-                                        angle: ((_direction ?? 0.0)*
-                                                math.pi)  / 180.0 - math.pi,
+                                        angle: ((_direction ?? 0.0) * math.pi) /
+                                                180.0 -
+                                            math.pi,
                                         child: Container(
                                           child: CustomPaint(
                                             size: Size(60.0, 60.0),
@@ -202,12 +203,12 @@ AnimationController _controller;
 
   void _moveMapToCurrentLocation({double zoom}) {
     animatedMapMove(
-        LatLng(_currentLocation.latitude ?? LatLng(0, 0),
-            _currentLocation.longitude ?? LatLng(0, 0)),
-        zoom ?? widget.map.zoom ?? 15,
-        widget.options.mapController,
-        this,
-        );
+      LatLng(_currentLocation.latitude ?? LatLng(0, 0),
+          _currentLocation.longitude ?? LatLng(0, 0)),
+      zoom ?? widget.map.zoom ?? 15,
+      widget.options.mapController,
+      this,
+    );
     // widget.options.mapController.move(
     //     LatLng(_currentLocation.latitude ?? LatLng(0, 0),
     //         _currentLocation.longitude ?? LatLng(0, 0)),
@@ -262,9 +263,10 @@ AnimationController _controller;
                 hoverColor: Colors.blueAccent[200],
                 onTap: () {
                   initialize();
-                    setState(() {
-                      widget.options.updateMapLocationOnPositionChange = ! widget.options.updateMapLocationOnPositionChange;
-                    });
+                  setState(() {
+                    widget.options.updateMapLocationOnPositionChange =
+                        !widget.options.updateMapLocationOnPositionChange;
+                  });
                   _moveMapToCurrentLocation(zoom: 17.0);
                 },
                 child: widget.options
@@ -288,7 +290,11 @@ AnimationController _controller;
   }
 
   void animatedMapMove(
-      LatLng destLocation, double destZoom, mapController, vsync,) {
+    LatLng destLocation,
+    double destZoom,
+    mapController,
+    vsync,
+  ) {
     // Create some tweens. These serve to split up the transition from one location to another.
     // In our case, we want to split the transition be<tween> our current map center and the destination.
     final latTween = Tween<double>(
@@ -312,6 +318,9 @@ AnimationController _controller;
     });
 
     animation.addStatusListener((status) {
+      if (_controller == null) {
+        return;
+      }
       if (status == AnimationStatus.completed) {
         _controller.dispose();
         _controller = null;
