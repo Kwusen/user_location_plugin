@@ -35,6 +35,8 @@ class _MapsPluginLayerState extends State<MapsPluginLayer>
   StreamSubscription<LocationData> _onLocationChangedStreamSubscription;
   StreamSubscription<double> _compassStreamSubscription;
 
+AnimationController _controller;
+
   @override
   void initState() {
     super.initState();
@@ -47,6 +49,9 @@ class _MapsPluginLayerState extends State<MapsPluginLayer>
 
   @override
   void dispose() {
+    if (_controller != null) {
+      _controller.dispose();
+    }
     super.dispose();
     _onLocationChangedStreamSubscription.cancel();
     _compassStreamSubscription.cancel();
@@ -293,14 +298,14 @@ class _MapsPluginLayerState extends State<MapsPluginLayer>
     final zoomTween = Tween<double>(begin: mapController.zoom, end: destZoom);
 
     // Create a animation controller that has a duration and a TickerProvider.
-    var controller = AnimationController(
+    _controller = AnimationController(
         duration: const Duration(milliseconds: 500), vsync: vsync);
     // The animation determines what path the animation will take. You can try different Curves values, although I found
     // fastOutSlowIn to be my favorite.
     Animation<double> animation =
-        CurvedAnimation(parent: controller, curve: Curves.fastOutSlowIn);
+        CurvedAnimation(parent: _controller, curve: Curves.fastOutSlowIn);
 
-    controller.addListener(() {
+    _controller.addListener(() {
       mapController.move(
           LatLng(latTween.evaluate(animation), lngTween.evaluate(animation)),
           zoomTween.evaluate(animation));
@@ -308,12 +313,14 @@ class _MapsPluginLayerState extends State<MapsPluginLayer>
 
     animation.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        controller.dispose();
+        _controller.dispose();
+        _controller = null;
       } else if (status == AnimationStatus.dismissed) {
-        controller.dispose();
+        _controller.dispose();
+        _controller = null;
       }
     });
-    controller.forward();
+    _controller.forward();
   }
 
   void forceMapUpdate() {
