@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:flutter_map/plugin_api.dart';
+import 'package:user_location/src/user_location_marker.dart';
 import 'package:user_location/src/user_location_options.dart';
 import 'package:latlong/latlong.dart';
 import 'package:location/location.dart';
@@ -24,11 +25,12 @@ class MapsPluginLayer extends StatefulWidget {
 class _MapsPluginLayerState extends State<MapsPluginLayer>
     with TickerProviderStateMixin {
   LatLng _currentLocation;
-  Marker _locationMarker;
+  UserLocationMarker _locationMarker;
   EventChannel _stream = EventChannel('locationStatusStream');
   var location = Location();
 
   bool mapLoaded;
+  bool initialStateOfupdateMapLocationOnPositionChange;
 
   double _direction;
 
@@ -53,8 +55,14 @@ class _MapsPluginLayerState extends State<MapsPluginLayer>
       _controller.dispose();
     }
     super.dispose();
-    _onLocationChangedStreamSubscription.cancel();
-    _compassStreamSubscription.cancel();
+    _cancel(_onLocationChangedStreamSubscription);
+    _cancel(_compassStreamSubscription);
+  }
+
+  void _cancel(StreamSubscription streamSubscription) {
+    if (streamSubscription != null) {
+      streamSubscription.cancel();
+    }
   }
 
   void initialize() {
@@ -100,7 +108,7 @@ class _MapsPluginLayerState extends State<MapsPluginLayer>
     var location = Location();
     if (await location.requestService()) {
       _onLocationChangedStreamSubscription =
-          location.onLocationChanged().listen((onValue) {
+          location.onLocationChanged.listen((onValue) {
         _addsMarkerLocationToMarkerLocationStream(onValue);
         setState(() {
           if (onValue.latitude == null || onValue.longitude == null) {
@@ -123,7 +131,7 @@ class _MapsPluginLayerState extends State<MapsPluginLayer>
 
           printLog("Direction : " + (_direction ?? 0).toString());
 
-          _locationMarker = Marker(
+          _locationMarker = UserLocationMarker(
               height: 60.0,
               width: 60.0,
               point:
@@ -141,9 +149,11 @@ class _MapsPluginLayerState extends State<MapsPluginLayer>
                               : ClipOval(
                                   child: Container(
                                     child: new Transform.rotate(
-                                        angle: ((_direction ?? 0.0) * math.pi) /
-                                                180.0 -
-                                            math.pi,
+                                        // This particular value seems to work
+                                        angle: (((_direction * -1) ?? 0) *
+                                                (math.pi / 180) *
+                                                -1) +
+                                            160,
                                         child: Container(
                                           child: CustomPaint(
                                             size: Size(60.0, 60.0),
@@ -193,8 +203,8 @@ class _MapsPluginLayerState extends State<MapsPluginLayer>
             setState(() {
               mapLoaded = true;
             });
-            animatedMapMove(
-                _currentLocation, 17, widget.options.mapController, this);
+            animatedMapMove(_currentLocation, widget.options.defaultZoom,
+                widget.options.mapController, this);
           }
         });
       });
@@ -202,17 +212,18 @@ class _MapsPluginLayerState extends State<MapsPluginLayer>
   }
 
   void _moveMapToCurrentLocation({double zoom}) {
-    animatedMapMove(
-      LatLng(_currentLocation.latitude ?? LatLng(0, 0),
-          _currentLocation.longitude ?? LatLng(0, 0)),
-      zoom ?? widget.map.zoom ?? 15,
-      widget.options.mapController,
-      this,
-    );
-    // widget.options.mapController.move(
-    //     LatLng(_currentLocation.latitude ?? LatLng(0, 0),
-    //         _currentLocation.longitude ?? LatLng(0, 0)),
-    //     widget.map.zoom ?? 15);
+    if (_currentLocation != null) {
+      animatedMapMove(
+          LatLng(_currentLocation.latitude ?? LatLng(0, 0),
+              _currentLocation.longitude ?? LatLng(0, 0)),
+          zoom ?? widget.map.zoom ?? 15,
+          widget.options.mapController,
+          this);
+      // widget.options.mapController.move(
+      //     LatLng(_currentLocation.latitude ?? LatLng(0, 0),
+      //         _currentLocation.longitude ?? LatLng(0, 0)),
+      //     widget.map.zoom ?? 15);
+    }
   }
 
   void _handleLocationChanges() {
@@ -245,7 +256,7 @@ class _MapsPluginLayerState extends State<MapsPluginLayer>
 
   _addsMarkerLocationToMarkerLocationStream(LocationData onValue) {
     if (widget.options.onLocationUpdate == null) {
-      printLog("Strem not provided");
+      printLog("Stream not provided");
     } else {
       widget.options
           .onLocationUpdate(LatLng(onValue.latitude, onValue.longitude));
@@ -253,6 +264,11 @@ class _MapsPluginLayerState extends State<MapsPluginLayer>
   }
 
   Widget build(BuildContext context) {
+    if (_locationMarker != null &&
+        !widget.options.markers.contains(_locationMarker)) {
+      widget.options.markers.add(_locationMarker);
+    }
+
     return widget.options.showMoveToCurrentLocationFloatingActionButton
         ? Positioned(
             bottom: widget.options.fabBottom,
@@ -268,6 +284,7 @@ class _MapsPluginLayerState extends State<MapsPluginLayer>
                         !widget.options.updateMapLocationOnPositionChange;
                   });
                   _moveMapToCurrentLocation(zoom: 17.0);
+                  widget.options.onTapFAB();
                 },
                 child: widget.options
                             .moveToCurrentLocationFloatingActionButton ==

@@ -1,6 +1,6 @@
 # user_location
 
-[![pub package](https://img.shields.io/pub/v/user_location.svg)](https://pub.dartlang.org/packages/user_location) ![travis](https://api.travis-ci.com/lpongetti/flutter_map_marker_cluster.svg?branch=master)
+[![pub package](https://img.shields.io/pub/v/user_location.svg)](https://pub.dartlang.org/packages/user_location) ![travis](https://api.travis-ci.com/lpongetti/flutter_map_marker_cluster.svg?branch=master) [![Codemagic build status](https://api.codemagic.io/apps/5e7057c82c964659341b9932/5e7057c82c964659341b9931/status_badge.svg)](https://codemagic.io/apps/5e7057c82c964659341b9932/5e7057c82c964659341b9931/latest_build)
 
 
 
@@ -21,7 +21,9 @@ Add flutter_map and  user_location to your pubspec.yaml :
 ```yaml
 dependencies:
   flutter_map: any
-  user_location: any # or the latest version on Pub
+  user_location:
+    git:
+      url: https://github.com/igaurab/user_location_plugin.git
 ```
 
 
